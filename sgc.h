@@ -5,7 +5,7 @@
 struct Produto {
     int codigo;
     char nome[100];
-    float preco;
+    double preco;
     int quantidade;
 };
 
@@ -23,6 +23,7 @@ void adicionarUsuarioAdmin(struct Usuario *usuarios, int *num_usuarios, int admi
 void excluirUsuarioAdmin(struct Usuario *usuarios, int *num_usuarios, int adminPassword);
 int autenticarUsuario(struct Usuario *usuarios, int num_usuarios, const char *nomeUsuario, const char *senhaUsuario);
 void cancelarPedidoAdmin(struct Produto *estoque, int num_produtos, struct Produto *pedidos, int *num_pedidos, int adminPassword);
+void salvarUsuariosArquivo(struct Usuario *usuarios, int num_usuarios);
 
 // Outras funções
 void listarProdutos(struct Produto *estoque, int num_produtos);
