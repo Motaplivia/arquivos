@@ -3,59 +3,66 @@
 #include <string.h>
 #include "sgc.h"  
 
-
+#define MAX_USUARIOS 100
+#define MAX_PRODUTOS 100
 
 
 // Funções específicas para administradores
 
 void adicionarProdutoAdmin(struct Produto *estoque, int *num_produtos) {
-    if (*num_produtos < 100) {  // Verifique se o estoque não está cheio
+    if (*num_produtos < MAX_PRODUTOS) {
         struct Produto novoProduto;
 
         printf("Digite o nome do novo produto: ");
         scanf("%s", novoProduto.nome);
 
         printf("Digite o preço do novo produto: ");
-        scanf("%f", &novoProduto.preco);
+        scanf("%lf", &novoProduto.preco);  // Corrigido para %lf
 
         printf("Digite a quantidade do novo produto: ");
         scanf("%d", &novoProduto.quantidade);
 
+        novoProduto.codigo = (*num_produtos) + 1;  // Gere um código automático
         estoque[*num_produtos] = novoProduto;  // Adicione o novo produto ao estoque
-        (*num_produtos)++;  // Incremente o número de produtos no estoque
+        (*num_produtos)++;
 
-        printf("Produto adicionado com sucesso!\n");
+        printf("Produto adicionado com sucesso! Código gerado: %d\n", novoProduto.codigo);
     } else {
         printf("O estoque está cheio. Não é possível adicionar mais produtos.\n");
     }
 }
 
+
+
+
+
 void lerEstoqueArquivo(struct Produto *estoque, int *num_produtos) {
     FILE *arquivo = fopen("estoque.txt", "r");
     if (arquivo == NULL) {
-        printf("Erro ao abrir o arquivo de estoque.\n");
+        perror("Erro ao abrir o arquivo de estoque");
         return;
     }
 
-    *num_produtos = 0;  // Inicialize o número de produtos lidos
+    fscanf(arquivo, "%d\n", num_produtos);
 
-    while (*num_produtos < 100 && fscanf(arquivo, "%s %f %d", estoque[*num_produtos].nome, &estoque[*num_produtos].preco, &estoque[*num_produtos].quantidade) == 3) {
-        (*num_produtos)++;
+    for (int i = 0; i < *num_produtos; i++) {
+        fscanf(arquivo, "%d %s %lf %d\n", &estoque[i].codigo, estoque[i].nome, &estoque[i].preco, &estoque[i].quantidade);  // Corrigido para %lf
     }
 
     fclose(arquivo);
 }
 
+
 void salvarEstoqueArquivo(struct Produto estoque[], int num_produtos) {
     FILE *arquivo = fopen("estoque.txt", "w");
-
     if (arquivo == NULL) {
-        printf("Erro ao abrir o arquivo.\n");
+        perror("Erro ao abrir o arquivo");
         return;
     }
-
+    
+    fprintf(arquivo, "%d\n", num_produtos);
     for (int i = 0; i < num_produtos; i++) {
-        fprintf(arquivo, "%d %s %d %.2f\n", estoque[i].codigo, estoque[i].nome, estoque[i].quantidade, estoque[i].preco);
+        fprintf(arquivo, "%d %s %.2f %d\n", estoque[i].codigo, estoque[i].nome, estoque[i].preco, estoque[i].quantidade);
     }
 
     fclose(arquivo);
@@ -65,44 +72,31 @@ void carregarEstoque(struct Produto *estoque, int *num_produtos) {
     FILE *arquivo = fopen("estoque.txt", "r");
 
     if (arquivo == NULL) {
-        printf("Erro ao abrir o arquivo de estoque.\n");
+        perror("Erro ao abrir o arquivo de estoque");
         return;
     }
 
-    while (!feof(arquivo)) {
-        char linha[100];
-        if (fgets(linha, sizeof(linha), arquivo) != NULL) {
-            char *token = strtok(linha, " ");
-            if (token != NULL) {
-                strcpy(estoque[*num_produtos].nome, token);
-            }
+    fscanf(arquivo, "%d\n", num_produtos);
 
-            token = strtok(NULL, ",");
-            if (token != NULL) {
-                estoque[*num_produtos].quantidade = atoi(token);
-            }
-
-            token = strtok(NULL, ",");
-            if (token != NULL) {
-                estoque[*num_produtos].preco = atof(token);
-            }
-
-            (*num_produtos)++;
-        }
+    while (*num_produtos < MAX_PRODUTOS && fscanf(arquivo, "%d %s %lf %d", &estoque[*num_produtos].codigo, estoque[*num_produtos].nome, &estoque[*num_produtos].preco, &estoque[*num_produtos].quantidade) == 4) {
+        (*num_produtos)++;
     }
 
     fclose(arquivo);
 }
 
+
+
 void listarProdutos(struct Produto *estoque, int num_produtos) {
     printf("\nProdutos Disponíveis:\n");
     for (int i = 0; i < num_produtos; i++) {
-        printf("Código: %d\n", i + 1);  // Mostra o código do produto
+        printf("Código: %d\n", estoque[i].codigo);
         printf("Nome: %s\n", estoque[i].nome);
-        printf("Preço: %.2f\n", estoque[i].preco);
-        printf("Quantidade: %d\n\n", estoque[i].quantidade);
+        printf("Preço: %.2f\n", estoque[i].preco);  // Formate o preço com duas casas decimais
+        printf("Quantidade: %d\n", estoque[i].quantidade);
     }
 }
+
 
 void adicionarUsuarioAdmin(struct Usuario *usuarios, int *num_usuarios, int adminPassword) {
     if (*num_usuarios < 100) {  // Verifique se o limite de usuários não foi atingido
@@ -236,11 +230,10 @@ int autenticarUsuario(struct Usuario *usuarios, int num_usuarios, const char *no
 void lerUsuariosArquivo(struct Usuario *usuarios, int *num_usuarios, int *adminPassword) {
     FILE *arquivo = fopen("usuarios.txt", "r");
     if (arquivo == NULL) {
-        printf("Erro ao abrir o arquivo de usuários.\n");
+        perror("Erro ao abrir o arquivo de usuários");
         return;
     }
 
-    *num_usuarios = 0;  // Inicialize o número de usuários lidos
 
     while (*num_usuarios < 100 && fscanf(arquivo, "%s %s %d", usuarios[*num_usuarios].nome, usuarios[*num_usuarios].senha, &usuarios[*num_usuarios].nivel_de_privilegio) == 3) {
         if (usuarios[*num_usuarios].nivel_de_privilegio == 1) {
@@ -254,14 +247,28 @@ void lerUsuariosArquivo(struct Usuario *usuarios, int *num_usuarios, int *adminP
 void lerPedidosArquivo(struct Produto *pedidos, int *num_pedidos) {
     FILE *arquivo = fopen("pedidos.txt", "r");
     if (arquivo == NULL) {
-        printf("Erro ao abrir o arquivo de pedidos.\n");
+        perror("Erro ao abrir o arquivo de pedidos");
         return;
     }
 
     *num_pedidos = 0;  // Inicialize o número de pedidos lidos
 
-    while (*num_pedidos < 100 && fscanf(arquivo, "%d %s %f %d", &pedidos[*num_pedidos].codigo, pedidos[*num_pedidos].nome, &pedidos[*num_pedidos].preco, &pedidos[*num_pedidos].quantidade) == 4) {
+    while (*num_pedidos < MAX_PRODUTOS && fscanf(arquivo, "%d %s %lf %d", &pedidos[*num_pedidos].codigo, pedidos[*num_pedidos].nome, &pedidos[*num_pedidos].preco, &pedidos[*num_pedidos].quantidade) == 4) {
         (*num_pedidos)++;
+    }
+
+    fclose(arquivo);
+}
+void salvarUsuariosArquivo(struct Usuario *usuarios, int num_usuarios) {
+    FILE *arquivo = fopen("usuarios.txt", "w");
+
+    if (arquivo == NULL) {
+        printf("Erro ao criar o arquivo de usuários.\n");
+        return;
+    }
+
+    for (int i = 0; i < num_usuarios; i++) {
+        fprintf(arquivo, "%s %s %d\n", usuarios[i].nome, usuarios[i].senha, usuarios[i].nivel_de_privilegio);
     }
 
     fclose(arquivo);
