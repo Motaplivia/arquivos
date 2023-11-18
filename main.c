@@ -5,7 +5,7 @@
 
 int main() {
     // Inicialização das estruturas de dados
-    struct Produto estoque[100];
+     struct Produto estoque[100];
     int num_produtos = 0;
 
     struct Usuario usuarios[100];
@@ -18,16 +18,14 @@ int main() {
 
     int opcao;
     
-    int i = -1;
+    int i;
 
     printf("Bem-vindo ao Sistema de Gestão Comercial (SGC)!\n");
-    // Carregue o estoque no início do programa
+    
     lerEstoqueArquivo(estoque, &num_produtos);
 
-    // Carregue os dados dos usuários no início do programa
     lerUsuariosArquivo(usuarios, &num_usuarios, &adminPassword);
-    
-    // Carregue os pedidos no início do programa
+
     lerPedidosArquivo(pedidos, &num_pedidos);
 
     while (1) {
@@ -92,7 +90,7 @@ int main() {
                 printf("Usuário não é administrador ou credenciais inválidas.\n");
             }
         
-    } else if (opcao == 2) {
+        } else if (opcao == 2) {
             // Acesso de usuário convencional
              int opcaoUsuario;
             do {
@@ -122,6 +120,8 @@ int main() {
                 }
             } while (opcaoUsuario != 4);
         } else if (opcao == 3) {
+            salvarEstoqueArquivo(estoque, num_produtos);
+            salvarUsuariosArquivo(usuarios, num_usuarios);
             salvarPedidosArquivo(pedidos, num_pedidos);
             printf("Saindo do Sistema de Gestão Comercial. Até logo!\n");
             break;
